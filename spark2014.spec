@@ -9,21 +9,22 @@
 # Upstream source information.
 %global upstream_owner             AdaCore
 %global upstream_name              spark2014
-%global upstream_commit_date       20230107
-%global upstream_commit            12db22e854defa9d1c993ef904af1e72330a68ca
+%global upstream_commit_date       20240111
+%global upstream_commit            ce5fad038790d5dc18f9b5345dc604f1ccf45b06
 %global upstream_shortcommit       %(c=%{upstream_commit}; echo ${c:0:7})
 
 %global upstream_name_why3         why3
-%global upstream_commit_why3       52b6a590ba9bfc64aa0d22b41715358f26124a1f
+%global upstream_commit_why3       fb4ca6cd8c7d888d3e8d281e6de87c66ec20f084
 %global upstream_shortcommit_why3  %(c=%{upstream_commit_why3}; echo ${c:0:7})
 
 # Major version must match the targeted version SPARK's FSF branch
 # (i.e., "fsf-xy"). The minor version is of limited interest as the
 # GNAT front-end is rarely updated on a GCC release branch.
-%global gcc_version  13.2.0
+%global gcc_version  14.1.1-20240508
+%global gcc_sha512   2c0106d8a92ea76dacd78bcb2ac988d3662f15aa846772f5c3b1c93aa77f3a5e4cc601a4ece208ab414e8075d1fef49ebe66dea658b24ab9594618717356a8d7
 
 Name:           spark2014
-Version:        13.0
+Version:        14.0
 Release:        1%{?dist}
 Summary:        Software development technology for engineering high-reliability applications
 
@@ -43,39 +44,61 @@ Source0:        https://github.com/%{upstream_owner}/%{upstream_name}/archive/%{
 Source1:        https://github.com/%{upstream_owner}/%{upstream_name_why3}/archive/%{upstream_commit_why3}.tar.gz#/%{upstream_name_why3}-%{upstream_shortcommit_why3}.tar.gz
 
 # The gnat2why application is partly built with source code from the GNAT front-end.
-Source2:        https://ftp.gnu.org/gnu/gcc/gcc-%{gcc_version}/gcc-%{gcc_version}.tar.xz
-Source3:        https://ftp.gnu.org/gnu/gcc/gcc-%{gcc_version}/gcc-%{gcc_version}.tar.xz.sig
-Source4:        https://ftp.gnu.org/gnu/gnu-keyring.gpg
+Source2:        https://src.fedoraproject.org/repo/pkgs/gcc/gcc-%{gcc_version}.tar.xz/sha512/%{gcc_sha512}/gcc-%{gcc_version}.tar.xz
 
 # Build-time configurable version of the SPARK_Install package.
-Source5:        spark_install.ads.in
+Source3:        spark_install.ads.in
 
-# [Fedora-specific] Make (search) paths configurable.
+# --- Patches for SPARK and GNATprove.
+
+# [Fedora-specific] Make (search) paths configurable (GNATprove).
 Patch0:         %{name}-prep-fix-paths-gnatprove.patch
-Patch1:         %{name}-prep-fix-paths-gnatwhy3.patch
 # [Fedora-specific] Allow additional build options for gnatprove.
-Patch2:         %{name}-add-build-options-for-gnatprove.patch
+Patch1:         %{name}-add-build-options-for-gnatprove.patch
 # [Fedora-specific] Colibri solver not available on Fedora.
-Patch3:         %{name}-colibri-not-available-for-testing.patch
-# [Alt-Ergo] Switches for Alt-Ergo use a single dash prior to version 2.4.0.
+Patch2:         %{name}-colibri-not-available-for-testing.patch
+# [Fedora-specific] Add ppc64le and s390x targets.
+Patch3:         %{name}-add-ppc64le-and-s390x-targets.patch
+# [Fedora-specific] Switches for Alt-Ergo use a single dash prior to v2.4.0.
 #   See also: https://ocamlpro.github.io/alt-ergo/About/changes.html#version-2-4-0-january-22-2021
 Patch4:         %{name}-fix-gnatprove-alt-ergo-version-inquiry.patch
+# [Fedora-specific] Adapt `install` target in makefile: SPARKlib is separate.
+Patch5:         %{name}-sparklib-is-separate.patch
+
+# --- Patches for Why3.
+
+# [Fedora-specific] Make (search) paths configurable (gnatwhy3).
+Patch20:        %{name}-why3-prep-fix-paths-gnatwhy3.patch
+# [Fedora-specific] Suppress "warning 70 [missing-mli]".
+#   Build fails as the warning-is-error option is enabled on Fedora.
+Patch21:        %{name}-why3-fix-missing-mli-error.patch
+# Add missing functions in ptree.ml (added in Inria-Why3 commit c8a5858).
+#   Functions are needed in `plugins/gnat_json/gnat_ast_to_ptree.ml`.
+Patch22:        %{name}-why3-add-missing-functions-in-ptree.patch
+# Replace `Pervasives` with `Stdlib` (fixed in upstream commit 92e01ef).
+Patch23:        %{name}-why3-replace-pervasives-with-stdlib.patch
+# Adapt to Coq 8.18 (fixed in upstream commit 25b9f61).
+Patch24:        %{name}-why3-adapt-to-coq-8.18.patch
 
 BuildRequires:  gcc-gnat gprbuild autoconf make sed
-# For verifying the signature of the GCC tarball.
-BuildRequires:  gnupg2
 # A fedora-gnat-project-common that contains GPRbuild_flags is needed.
 BuildRequires:  fedora-gnat-project-common >= 3.17
+# SPARK/GNATprove depends on a special version of libgpr2, called "next".
+BuildRequires:  libgpr2_next-devel
 BuildRequires:  gnatcoll-core-devel
 BuildRequires:  zlib-devel
 BuildRequires:  coq
+# OCaml dependencies as mentioned in `Why3/fsf_build.sh`.
+# -- Note: Package `ocaml-seq` not available in Fedora (yet).
 BuildRequires:  ocaml-menhir
 BuildRequires:  ocaml-ocamlgraph-devel
-BuildRequires:  ocaml-ocplib-simplex-devel
 BuildRequires:  ocaml-num-devel
+BuildRequires:  ocaml-re-devel
 BuildRequires:  ocaml-yojson-devel
 BuildRequires:  ocaml-zarith-devel
-BuildRequires:  ocaml-zip-devel
+BuildRequires:  ocaml-sexplib-devel
+BuildRequires:  ocaml-ppx-sexp-conv-devel
+BuildRequires:  ocaml-ppx-deriving-devel
 BuildRequires:  python3-sphinx
 BuildRequires:  python3-sphinx-latex
 BuildRequires:  python3-sphinx_rtd_theme
@@ -88,12 +111,18 @@ BuildRequires:  python3-e3-testsuite
 BuildRequires:  cvc5, z3, alt-ergo
 %endif
 
-Requires:       gcc-gnat >= 13
+Requires:       gcc-gnat >= 14
 Requires:       gprbuild
 
-# gnat2why depends on a customized version of Why3. This version is installed
-# in a package specific directory in the libexec dir.
+# gnat2why depends on a forked version of Why3. This version is installed in a
+# package specific directory in the libexec dir. It is roughly based on Why3
+# 1.6.0. Common commit has author date 2023-05-15 11:52:04:
+#
+# - Inria        : 006edd7ea285bfd32eb2404e8695b1273505ce04
+# - AdaCore fork : 006edd7ea285bfd32eb2404e8695b1273505ce04
+#
 Provides:       bundled(why3)
+
 # gnat2why is build with portions of the GNAT source code. GNAT itself is not
 # included (as a binary) and can be installed alongside.
 Provides:       bundled(gcc-gnat)
@@ -110,8 +139,7 @@ Recommends:     cvc5, z3, alt-ergo
 # available. Only pick the most narrow one. If you have two ExclusiveArch
 # lines in a spec file, RPM ignores the first one and uses the second one!
 # ExclusiveArch:  %{GPRbuild_arches}
-# ExclusiveArch:  %{ocaml_native_compiler}
-ExclusiveArch:  %{x86_64}
+ExclusiveArch:  %{ocaml_native_compiler}
 
 %global common_description_en \
 SPARK is a software development technology specifically designed for \
@@ -149,9 +177,6 @@ manual in HTML and PDF format, and some examples.
 %prep
 %setup -q -n %{upstream_name}-%{upstream_commit}
 
-# Verify the signature of the GCC tarball.
-%{gpgverify} --keyring=%{SOURCE4} --signature=%{SOURCE3} --data=%{SOURCE2}
-
 # Replace the Why3 git submodule placeholder with the downloaded sources.
 rmdir why3
 tar --extract --gzip --file %{SOURCE1}
@@ -163,11 +188,21 @@ tar --extract --xz --file %{SOURCE2} gcc-%{gcc_version}/gcc/ada
 ln --symbolic ../gcc-%{gcc_version}/gcc/ada gnat2why/gnat_src
 
 # All sources have been setup, we can now start patching.
+
+# Apply patches to SPARK and GNATprove.
 %patch 0 -p1
 %patch 1 -p1
 %patch 2 -p1
 %patch 3 -p1
 %patch 4 -p1
+%patch 5 -p1
+
+# Apply patches to Why3.
+%patch 20 -p1
+%patch 21 -p1
+%patch 22 -p1
+%patch 23 -p1
+%patch 24 -p1
 
 # Patch gnatprove's hard-coded assumptions on (relative) paths.
 # -- Note: Depends on the application of patch 0.
@@ -177,10 +212,10 @@ sed --expression='s,@PREFIX@,%{_prefix},'               \
     --expression='s,@DATADIR@,%{_datadir},'             \
     --expression='s,@GNATPRJDIR@,%{_GNAT_project_dir},' \
     --expression='s,@NAME@,%{name},'                    \
-    %{SOURCE5} > ./src/gnatprove/spark_install.ads
+    %{SOURCE3} > ./src/gnatprove/spark_install.ads
 
 # Patch gnatwhy3's hard-coded assumptions on (relative) paths.
-# -- Note: Depends on the application of patch 1.
+# -- Note: Depends on the application of patch 20.
 sed --in-place \
     --expression='s,@LIBEXECDIR@,%{_libexecdir},' \
     --expression='s,@DATADIR@,%{_datadir},'       \
@@ -189,7 +224,7 @@ sed --in-place \
 
 # Update some release specific information.
 sed --in-place \
-    --expression='25 { s/0.0w/FSF 13.0/; t; q1 }' \
+    --expression='25 { s/0.0w/FSF 14.0/; t; q1 }' \
     ./spark2014vsn.ads
 
 
@@ -239,6 +274,13 @@ mkdir --parents \
 mv ./install/share/doc/spark/*      %{buildroot}%{_pkgdocdir}
 mv ./install/share/examples/spark/* %{buildroot}%{_pkgdocdir}/examples
 
+# Remove files that should and are already in `libexec/spark2014/bin`.
+rm %{buildroot}%{_libexecdir}/%{name}/lib/why3/why3server
+rm %{buildroot}%{_libexecdir}/%{name}/lib/why3/why3cpulimit
+
+# PVS is not supported in SPARK.
+rm %{buildroot}%{_libexecdir}/%{name}/lib/why3/why3-call-pvs
+
 # Show installed files (to ease debugging based on build server logs).
 find ./install    -exec stat --format "%A %n" {} \;
 find %{buildroot} -exec stat --format "%A %n" {} \;
@@ -258,11 +300,9 @@ export PYTHONPATH=%{buildroot}%{python3_sitearch}:%{buildroot}%{python3_sitelib}
 
 # Use a file-based cache for sharing proof results between tests.
 %global cachedir '%{_builddir}/%{upstream_name}-%{upstream_commit}/testsuite/result_cache'
-mkdir --parents %{cachedir}
 
-sed --in-place \
-    --expression='/--memcached-server/ { s,localhost:11211,file:%{cachedir},; t; q1; }' \
-    ./testsuite/gnatprove/lib/python/test_support.py
+mkdir --parents %{cachedir}
+export GNATPROVE_CACHE='file:%{cachedir}'
 
 # Run the tests.
 %python3 testsuite/gnatprove/run-tests \
@@ -306,5 +346,8 @@ sed --in-place \
 ###############
 
 %changelog
+* Sun Feb 25 2024 Dennis van Raaij <dvraaij@fedoraproject.org> - 14.0-1
+- Updated to FSF 14.0.
+
 * Sat Aug 05 2023 Dennis van Raaij <dvraaij@fedoraproject.org> - 13.0-1
 - New package, initial version FSF 13.0.
