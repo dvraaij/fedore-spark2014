@@ -72,6 +72,8 @@ Patch7:         %{name}-replace-pervasives-with-stdlib.patch
 Patch8:         %{name}-adapt-to-coq-8.18.patch
 # [SPARK 2014] Adapt `install` target in makefile: SPARKlib is separate.
 Patch9:         %{name}-sparklib-is-separate.patch
+# [Fedora-specific] Add ppc64le and s390x targets.
+Patch10:        %{name}-add-ppc64le-and-s390x-targets.patch
 
 BuildRequires:  gcc-gnat gprbuild autoconf make sed
 # A fedora-gnat-project-common that contains GPRbuild_flags is needed.
@@ -186,6 +188,7 @@ ln --symbolic ../gcc-%{gcc_version}/gcc/ada gnat2why/gnat_src
 %patch 7 -p1
 %patch 8 -p1
 %patch 9 -p1
+%patch 10 -p1
 
 # Patch gnatprove's hard-coded assumptions on (relative) paths.
 # -- Note: Depends on the application of patch 0.
