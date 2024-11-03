@@ -20,12 +20,12 @@
 # Major version must match the targeted version SPARK's FSF branch
 # (i.e., "fsf-xy"). The minor version is of limited interest as the
 # GNAT front-end is rarely updated on a GCC release branch.
-%global gcc_version  14.1.1-20240508
-%global gcc_sha512   2c0106d8a92ea76dacd78bcb2ac988d3662f15aa846772f5c3b1c93aa77f3a5e4cc601a4ece208ab414e8075d1fef49ebe66dea658b24ab9594618717356a8d7
+%global gcc_version  14.2.1-20241025
+%global gcc_sha512   1729619d7c0ebdb6801f692f213ccdd2f393d28d2c2acc3cedc897992c0996d45d760e9f4bd4d6f3ef16c7343a1e24c21c45989fa6c08ba1556fa8c9a5662d5f
 
 Name:           spark2014
 Version:        14.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Software development technology for engineering high-reliability applications
 
 License:        GPL-3.0-or-later AND LGPL-2.1-only AND LGPL-2.0-only WITH OCaml-LGPL-linking-exception
@@ -64,6 +64,8 @@ Patch3:         %{name}-add-ppc64le-and-s390x-targets.patch
 Patch4:         %{name}-fix-gnatprove-alt-ergo-version-inquiry.patch
 # [Fedora-specific] Adapt `install` target in makefile: SPARKlib is separate.
 Patch5:         %{name}-sparklib-is-separate.patch
+# Use 'gnatcoll_core.gpr' instead of 'gnatcoll.gpr'.
+Patch6:         %{name}-refine-dependencies-to-gnatcoll.patch
 
 # --- Patches for Why3.
 
@@ -85,7 +87,8 @@ BuildRequires:  gcc-gnat gprbuild autoconf make sed
 BuildRequires:  fedora-gnat-project-common >= 3.17
 # SPARK/GNATprove depends on a special version of libgpr2, called "next".
 BuildRequires:  libgpr2_next-devel
-BuildRequires:  gnatcoll-core-devel
+# A gnatcoll-core that contains gnatcoll_core.gpr is needed.
+BuildRequires:  gnatcoll-core-devel >= 25.0.0
 BuildRequires:  zlib-devel
 BuildRequires:  coq
 # OCaml dependencies as mentioned in `Why3/fsf_build.sh`.
@@ -196,6 +199,7 @@ ln --symbolic ../gcc-%{gcc_version}/gcc/ada gnat2why/gnat_src
 %patch 3 -p1
 %patch 4 -p1
 %patch 5 -p1
+%patch 6 -p1
 
 # Apply patches to Why3.
 %patch 20 -p1
@@ -346,6 +350,9 @@ export GNATPROVE_CACHE='file:%{cachedir}'
 ###############
 
 %changelog
+* Sun Nov 03 2024 Dennis van Raaij <dvraaij@fedoraproject.org> - 14.0-2
+- Rebuilt for GCC 14.2.1-20241025 and the v25.0.0 dependency updates.
+
 * Sun Feb 25 2024 Dennis van Raaij <dvraaij@fedoraproject.org> - 14.0-1
 - Updated to FSF 14.0.
 
