@@ -1,0 +1,24 @@
+--- a/docs/lrm/source/conf.py
++++ b/docs/lrm/source/conf.py
+@@ -51,8 +51,7 @@
+     "sphinx.ext.todo",
+     "sphinx.ext.ifconfig",
+     "sphinx.ext.autosectionlabel",
+-    "sphinx_rtd_theme",
+-    "pagefind-sphinx",
++    "sphinx_rtd_theme"
+ ]
+ 
+ Display_Trace_Units = False
+--- a/docs/ug/conf.py
++++ b/docs/ug/conf.py
+@@ -37,8 +37,7 @@
+ extensions = [
+     "sphinx.ext.todo",
+     "sphinx.ext.autosectionlabel",
+-    "sphinx_rtd_theme",
+-    "pagefind-sphinx",
++    "sphinx_rtd_theme"
+ ]
+ 
+ # Add any paths that contain templates here, relative to this directory.

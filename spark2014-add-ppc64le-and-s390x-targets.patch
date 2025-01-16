@@ -4,8 +4,8 @@
  
     type Host_Operating_System_Flavor is
        (X86_Windows, X86_64_Windows, X86_Linux, X86_64_Linux, X86_64_Darwin,
--       X86_64_FreeBSD, CodePeer_OS, AArch64_Darwin, AArch64_Linux);
-+       X86_64_FreeBSD, CodePeer_OS, AArch64_Darwin, AArch64_Linux,
+-       X86_64_FreeBSD, GNATSAS_OS, AArch64_Darwin, AArch64_Linux);
++       X86_64_FreeBSD, GNATSAS_OS, AArch64_Darwin, AArch64_Linux,
 +       PPC64le_Linux, S390x_Linux);
  
     function Get_OS_Flavor return Host_Operating_System_Flavor;
@@ -42,7 +42,7 @@
 +end Platform;
 --- a/src/gnatprove/spark_report.adb
 +++ b/src/gnatprove/spark_report.adb
-@@ -1107,7 +1107,9 @@
+@@ -1200,7 +1200,9 @@
                  | X86_64_Windows => "Windows",
               when X86_Linux
                  | X86_64_Linux
@@ -52,4 +52,4 @@
 +                | S390x_Linux    => "Linux",
               when X86_64_Darwin  => "Darwin",
               when X86_64_FreeBSD => "FreeBSD",
-              when CodePeer_OS    => "CodePeer OS",
+              when GNATSAS_OS    => "GNATSAS OS",

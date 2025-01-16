@@ -3,8 +3,8 @@
 set -xe
 
 # Source info.
-SPARK_COMMIT=ce5fad038790d5dc18f9b5345dc604f1ccf45b06
-WHY3_COMMIT=fb4ca6cd8c7d888d3e8d281e6de87c66ec20f084
+SPARK_COMMIT=1d27d7cf1e19633390beb92a9ea9f11ba601f773
+WHY3_COMMIT=70ed0a8608a7a605e35ac14fdea723ccdf3e4e6e
 
 # Remove any existing source dir.
 rm -rf spark2014-$SPARK_COMMIT

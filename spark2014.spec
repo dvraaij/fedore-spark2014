@@ -9,23 +9,23 @@
 # Upstream source information.
 %global upstream_owner             AdaCore
 %global upstream_name              spark2014
-%global upstream_commit_date       20240111
-%global upstream_commit            ce5fad038790d5dc18f9b5345dc604f1ccf45b06
+%global upstream_commit_date       20250125
+%global upstream_commit            1d27d7cf1e19633390beb92a9ea9f11ba601f773
 %global upstream_shortcommit       %(c=%{upstream_commit}; echo ${c:0:7})
 
 %global upstream_name_why3         why3
-%global upstream_commit_why3       fb4ca6cd8c7d888d3e8d281e6de87c66ec20f084
+%global upstream_commit_why3       70ed0a8608a7a605e35ac14fdea723ccdf3e4e6e
 %global upstream_shortcommit_why3  %(c=%{upstream_commit_why3}; echo ${c:0:7})
 
 # Major version must match the targeted version SPARK's FSF branch
 # (i.e., "fsf-xy"). The minor version is of limited interest as the
 # GNAT front-end is rarely updated on a GCC release branch.
-%global gcc_version  14.2.1-20241025
-%global gcc_sha512   1729619d7c0ebdb6801f692f213ccdd2f393d28d2c2acc3cedc897992c0996d45d760e9f4bd4d6f3ef16c7343a1e24c21c45989fa6c08ba1556fa8c9a5662d5f
+%global gcc_version  15.0.1-20250114
+%global gcc_sha512   54d1749fb3b57c0e96bf9887b64c60d8e61cd634ab460ec03b7e909ea4a54f898988984d2dff7cdefd093ee9c8a235b70f20d2f005cdf14313077b28ddcf6759
 
 Name:           spark2014
-Version:        14.0
-Release:        2%{?dist}
+Version:        15.0
+Release:        1%{?dist}
 Summary:        Software development technology for engineering high-reliability applications
 
 License:        GPL-3.0-or-later AND LGPL-2.1-only AND LGPL-2.0-only WITH OCaml-LGPL-linking-exception
@@ -66,6 +66,12 @@ Patch4:         %{name}-fix-gnatprove-alt-ergo-version-inquiry.patch
 Patch5:         %{name}-sparklib-is-separate.patch
 # Use 'gnatcoll_core.gpr' instead of 'gnatcoll.gpr'.
 Patch6:         %{name}-refine-dependencies-to-gnatcoll.patch
+# Adapt for recent changes in libgpr2 that are not in libgpr2 v25.0.0.
+#   Revert commit: "Adjust to libgpr2 API changes for the log system"
+#   https://github.com/AdaCore/spark2014/commit/72095b85873f65a8c8f38bc4bbc557f550c0f87f
+Patch7:         %{name}-revert-gpr2-reporter-change.patch
+# Pagefind (see: https://pagefind.app/) is not in Fedora (yet).
+Patch8:         %{name}-pagefind-unavailable.patch
 
 # --- Patches for Why3.
 
@@ -74,19 +80,21 @@ Patch20:        %{name}-why3-prep-fix-paths-gnatwhy3.patch
 # [Fedora-specific] Suppress "warning 70 [missing-mli]".
 #   Build fails as the warning-is-error option is enabled on Fedora.
 Patch21:        %{name}-why3-fix-missing-mli-error.patch
-# Add missing functions in ptree.ml (added in Inria-Why3 commit c8a5858).
-#   Functions are needed in `plugins/gnat_json/gnat_ast_to_ptree.ml`.
-Patch22:        %{name}-why3-add-missing-functions-in-ptree.patch
-# Replace `Pervasives` with `Stdlib` (fixed in upstream commit 92e01ef).
-Patch23:        %{name}-why3-replace-pervasives-with-stdlib.patch
-# Adapt to Coq 8.18 (fixed in upstream commit 25b9f61).
-Patch24:        %{name}-why3-adapt-to-coq-8.18.patch
+# [Fedora-specific] Fix incompatible pointer type.
+#   GCC warning `-Wincompatible-pointer-types` triggers an error.
+Patch22:        %{name}-why3-fix-incompatible-pointer-type.patch
+# Adapt for recent changes in OCaml: `effect` is now a keyword.
+#   Apply commit: "effect renamed to effekt"
+#   https://gitlab.inria.fr/why3/why3/-/commit/deb14b0676f3b247124c77941d4b4b5c374afe19
+Patch23:        %{name}-why3-rename-effect-to-effekt.patch
+# Fix incorrect merge.
+#   https://github.com/AdaCore/why3/compare/cde6ba24c..707fbc43c
+Patch24:        %{name}-why3-fix-incorrect-merge.patch
 
 BuildRequires:  gcc-gnat gprbuild autoconf make sed
 # A fedora-gnat-project-common that contains GPRbuild_flags is needed.
 BuildRequires:  fedora-gnat-project-common >= 3.17
-# SPARK/GNATprove depends on a special version of libgpr2, called "next".
-BuildRequires:  libgpr2_next-devel
+BuildRequires:  libgpr2-devel
 # A gnatcoll-core that contains gnatcoll_core.gpr is needed.
 BuildRequires:  gnatcoll-core-devel >= 25.0.0
 BuildRequires:  zlib-devel
@@ -114,15 +122,15 @@ BuildRequires:  python3-e3-testsuite
 BuildRequires:  cvc5, z3, alt-ergo
 %endif
 
-Requires:       gcc-gnat >= 14
+Requires:       gcc-gnat >= 15
 Requires:       gprbuild
 
 # gnat2why depends on a forked version of Why3. This version is installed in a
 # package specific directory in the libexec dir. It is roughly based on Why3
-# 1.6.0. Common commit has author date 2023-05-15 11:52:04:
+# 1.7.1. Common commit has author date 2024-02-19 10:32:47:
 #
-# - Inria        : 006edd7ea285bfd32eb2404e8695b1273505ce04
-# - AdaCore fork : 006edd7ea285bfd32eb2404e8695b1273505ce04
+# - Inria        : 17bee606014b9131b71c0a779f21013e9b5f849c
+# - AdaCore fork : 70704271c9a7b5b76648e0585268ead00aa63034
 #
 Provides:       bundled(why3)
 
@@ -200,6 +208,8 @@ ln --symbolic ../gcc-%{gcc_version}/gcc/ada gnat2why/gnat_src
 %patch 4 -p1
 %patch 5 -p1
 %patch 6 -p1
+%patch 7 -p1
+%patch 8 -p1
 
 # Apply patches to Why3.
 %patch 20 -p1
@@ -225,12 +235,6 @@ sed --in-place \
     --expression='s,@DATADIR@,%{_datadir},'       \
     --expression='s,@NAME@,%{name},'              \
     ./why3/src/gnat/gnat_util.ml
-
-# Update some release specific information.
-sed --in-place \
-    --expression='25 { s/0.0w/FSF 14.0/; t; q1 }' \
-    ./spark2014vsn.ads
-
 
 ###########
 ## Build ##
@@ -350,6 +354,9 @@ export GNATPROVE_CACHE='file:%{cachedir}'
 ###############
 
 %changelog
+* Sun Jan 19 2025 Dennis van Raaij <dvraaij@fedoraproject.org> - 15.0-1
+- Updated to FSF 15.0.
+
 * Sun Nov 03 2024 Dennis van Raaij <dvraaij@fedoraproject.org> - 14.0-2
 - Rebuilt for GCC 14.2.1-20241025 and the v25.0.0 dependency updates.
 

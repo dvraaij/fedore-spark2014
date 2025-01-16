@@ -1,0 +1,27 @@
+--- b/why3/Makefile.in
++++ a/why3/Makefile.in
+@@ -557,6 +557,7 @@
+ PLUG_PARSER = genequlin dimacs
+ PLUG_PRINTER =
+ PLUG_TRANSFORM =
++PLUG_STRATEGIES = forward_propagation
+ PLUG_TPTP = tptp_parser tptp_typing tptp_lexer tptp_printer
+ PLUG_PYTHON = py_parser py_lexer py_main
+ PLUG_MICROC = mc_parser mc_lexer mc_printer mc_main
+@@ -609,6 +610,7 @@
+ PLUGMODULES = $(addprefix plugins/parser/, $(PLUG_PARSER)) \
+ 	      $(addprefix plugins/printer/, $(PLUG_PRINTER)) \
+ 	      $(addprefix plugins/transform/, $(PLUG_TRANSFORM)) \
++	      $(addprefix plugins/strategies/, $(PLUG_STRATEGIES)) \
+ 	      $(TPTPMODULES) $(PYTHONMODULES) $(MICROCMODULES) \
+ 	      $(CFGMODULES) \
+ 	      $(ADAMODULES) $(GNATJSONMODULES)
+@@ -661,6 +663,8 @@
+ $(PLUG_PRINTER:%=lib/plugins/%.cma): lib/plugins/%.cma: plugins/printer/%.cmo
+ $(PLUG_TRANSFORM:%=lib/plugins/%.cmxs): lib/plugins/%.cmxs: plugins/transform/%.cmx
+ $(PLUG_TRANSFORM:%=lib/plugins/%.cma): lib/plugins/%.cma: plugins/transform/%.cmo
++$(PLUG_STRATEGIES:%=lib/plugins/%.cmxs): lib/plugins/%.cmxs: plugins/strategies/%.cmx
++$(PLUG_STRATEGIES:%=lib/plugins/%.cma): lib/plugins/%.cma: plugins/strategies/%.cmo
+ lib/plugins/tptp.cmxs: $(TPTPCMX)
+ lib/plugins/tptp.cma: $(TPTPCMO)
+ lib/plugins/python.cmxs: $(PYTHONCMX)

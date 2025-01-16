@@ -1,8 +1,8 @@
 # Upstream source information.
 %global upstream_owner        AdaCore
 %global upstream_name         spark2014
-%global upstream_commit_date  20240111
-%global upstream_commit       ce5fad038790d5dc18f9b5345dc604f1ccf45b06
+%global upstream_commit_date  20250125
+%global upstream_commit       1d27d7cf1e19633390beb92a9ea9f11ba601f773
 %global upstream_shortcommit  %(c=%{upstream_commit}; echo ${c:0:7})
 
 Name:           spark2014-test
@@ -92,6 +92,9 @@ export GNATPROVE_CACHE='file:%{cachedir}'
 ###############
 
 %changelog
+* Sun Jan 19 2025 Dennis van Raaij <dvraaij@fedoraproject.org> - 15.0-1
+- Updated to FSF 15.0.
+
 * Sun Feb 25 2024 Dennis van Raaij <dvraaij@fedoraproject.org> - 14.0-1
 - Updated to FSF 14.0.
 

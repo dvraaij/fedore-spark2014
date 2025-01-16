@@ -1,6 +1,6 @@
 --- a/src/gnatprove/configuration.ads
 +++ b/src/gnatprove/configuration.ads
-@@ -39,6 +39,7 @@
+@@ -40,6 +40,7 @@
  with Named_Semaphores;  use Named_Semaphores;
  with String_Utils;      use String_Utils;
  with VC_Kinds;          use VC_Kinds;
@@ -8,7 +8,7 @@
  
  package Configuration is
  
-@@ -223,64 +224,6 @@
+@@ -232,67 +233,6 @@
     Max_Non_Blank_Lines : constant := 6;
     --  Maximum number of consecutive non blank lines on standard output
  
@@ -30,39 +30,42 @@
 -      --  prefix/share/spark/theories   - Why3 files for Ada theories
 -
 -      Prefix                   : constant String := Executable_Location;
--      Lib                      : constant String := Compose (Prefix, "lib");
+-      Lib                      : constant String :=
+-        Ada.Directories.Compose (Prefix, "lib");
 -      Libexec_Spark            : constant String :=
--        Compose (Compose (Prefix, "libexec"), "spark");
+-        Ada.Directories.Compose
+-          (Ada.Directories.Compose (Prefix, "libexec"), "spark");
 -      Libexec_Spark_Bin        : constant String :=
--        Compose (Libexec_Spark, "bin");
+-        Ada.Directories.Compose (Libexec_Spark, "bin");
 -      Share                    : constant String :=
--        Compose (Prefix, "share");
+-        Ada.Directories.Compose (Prefix, "share");
 -      Libexec_Share_Why3       : constant String :=
--        Compose (Compose (Libexec_Spark, "share"), "why3");
+-        Ada.Directories.Compose
+-          (Ada.Directories.Compose (Libexec_Spark, "share"), "why3");
 -      Share_Spark              : constant String :=
--        Compose (Share, "spark");
+-        Ada.Directories.Compose (Share, "spark");
 -      Share_Spark_Theories     : constant String :=
--        Compose (Share_Spark, "theories");
+-        Ada.Directories.Compose (Share_Spark, "theories");
 -      Share_Spark_Config       : constant String :=
--        Compose (Share_Spark, "config");
+-        Ada.Directories.Compose (Share_Spark, "config");
 -      Share_Spark_Explain_Codes : constant String :=
--        Compose (Share_Spark, "explain_codes");
+-        Ada.Directories.Compose (Share_Spark, "explain_codes");
 -      Share_Spark_Runtimes     : constant String :=
--        Compose (Share_Spark, "runtimes");
+-        Ada.Directories.Compose (Share_Spark, "runtimes");
 -      Help_Msg_File            : constant String :=
--        Compose (Share_Spark, "help.txt");
+-        Ada.Directories.Compose (Share_Spark, "help.txt");
 -      Gpr_Frames_DB            : constant String :=
--        Compose (Share_Spark_Config, "frames");
+-        Ada.Directories.Compose (Share_Spark_Config, "frames");
 -      Gpr_Translation_DB : constant String :=
--        Compose (Share_Spark_Config, "gnat2why");
+-        Ada.Directories.Compose (Share_Spark_Config, "gnat2why");
 -      Gnatprove_Conf           : constant String :=
--        Compose (Share_Spark_Config, "gnatprove.conf");
+-        Ada.Directories.Compose (Share_Spark_Config, "gnatprove.conf");
 -      GNSA_Dir                 : constant String :=
 -        (if Ada.Environment_Variables.Exists ("GNSA_ROOT")
 -         then Ada.Environment_Variables.Value ("GNSA_ROOT")
 -         else Libexec_Spark);
 -      GNSA_Dir_Bin             : constant String :=
--        Compose (GNSA_Dir, "bin");
+-        Ada.Directories.Compose (GNSA_Dir, "bin");
 -      Z3_Present               : Boolean;
 -      CVC5_Present             : Boolean;
 -      Colibri_Present          : Boolean;
@@ -75,25 +78,25 @@
  
 --- a/src/gnatprove/gnatprove.adb
 +++ b/src/gnatprove/gnatprove.adb
-@@ -86,6 +86,7 @@
- with GPR2.Project.View;
+@@ -85,6 +85,7 @@
  with Named_Semaphores; use Named_Semaphores;
  with String_Utils;     use String_Utils;
+ with VC_Kinds;         use VC_Kinds;
 +with SPARK_Install;
  
  procedure Gnatprove with SPARK_Mode is
  
-@@ -847,10 +848,9 @@
+@@ -861,10 +862,9 @@
        Path_Val : constant String := Value ("PATH", "");
        Gpr_Val  : constant String := Value ("GPR_PROJECT_PATH", "");
        Gpr_Tool : constant String := Value ("GPR_TOOL", "");
 -      Libgnat  : constant String :=
--        Compose (SPARK_Install.Lib, "gnat");
+-        Ada.Directories.Compose (SPARK_Install.Lib, "gnat");
 -      Sharegpr : constant String :=
--        Compose (SPARK_Install.Share, "gpr");
+-        Ada.Directories.Compose (SPARK_Install.Share, "gpr");
 +      Libgnat  : constant String := SPARK_Install.Lib_GNAT;
 +      Sharegpr : constant String := SPARK_Install.Share_GPR;
 +
     begin
-       --  Unset various environmment variables which might confuse the compiler
-       --  or gprbuild.
+       --  Unset various environmment variables which might confuse the
+       --  compiler, gprbuild or why3.
